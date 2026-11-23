@@ -1,0 +1,1733 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>우리 마을 네컷 · 고창 마을 기록단 포토부스</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Noto Sans KR & Gowun Batang (한국적 감성 명조) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: #f6f3ed;
+      color: #292524;
+    }
+    /* 체크무늬 투명 배경 표현 (미리보기 영역) */
+    .preview-backdrop {
+      background-color: #e7e2d8;
+      background-image:
+        radial-gradient(#d4cdc0 1px, transparent 1px);
+      background-size: 16px 16px;
+    }
+    /* 카메라 플래시 애니메이션 */
+    @keyframes shutterFlash {
+      0% { opacity: 0.95; }
+      100% { opacity: 0; }
+    }
+    .animate-flash {
+      animation: shutterFlash 0.45s ease-out forwards;
+    }
+    /* 카운트다운 숫자 팝업 애니메이션 */
+    @keyframes countPop {
+      0% { transform: scale(0.5); opacity: 0; }
+      40% { transform: scale(1.15); opacity: 1; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .animate-count {
+      animation: countPop 0.35s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+    /* 커스텀 스크롤바 */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- 상단 헤더 -->
+  <header class="bg-white/90 backdrop-blur border-b border-stone-200 sticky top-0 z-30">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-2xl bg-emerald-700 text-white flex items-center justify-center shadow-sm shrink-0">
+          <!-- 카메라 & 마을 아이콘 SVG -->
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+            <circle cx="12" cy="13" r="3.5" />
+          </svg>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-xl sm:text-2xl font-extrabold tracking-tight text-stone-900">우리 마을 네컷</h1>
+            <span class="px-2.5 py-0.5 text-xs font-bold rounded-full bg-emerald-100 text-emerald-800">고창 마을 기록단</span>
+          </div>
+          <p class="text-xs sm:text-sm text-stone-500 mt-0.5">
+            셀피 엽서 용지(100×148mm) 규격 · 1명 / 2명 / 3명 분할 인쇄 · 내 배경(캔바) 지원
+          </p>
+        </div>
+      </div>
+
+      <!-- 상단 빠른 초기화 / 안내 버튼 -->
+      <div class="flex items-center gap-2 self-end sm:self-auto">
+        <button id="btnResetAll" type="button"
+          class="px-3 py-2 text-xs sm:text-sm font-semibold text-stone-600 bg-stone-100 hover:bg-stone-200 rounded-xl transition flex items-center gap-1.5">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          새로 찍기 (사진 초기화)
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- 메인 작업 공간 (좌측: 실시간 인화 미리보기 / 우측: 3단계 설정) -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+      <!-- [좌측 컬럼] 실시간 100x148mm 인화지 미리보기 -->
+      <section class="lg:col-span-5 lg:sticky lg:top-24 bg-white rounded-3xl shadow-sm border border-stone-200/80 p-4 sm:p-5">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            <h2 class="text-sm sm:text-base font-bold text-stone-800">실시간 인화지 미리보기</h2>
+          </div>
+          <span id="badgeLayoutInfo" class="text-xs font-semibold px-2.5 py-1 rounded-lg bg-stone-100 text-stone-600">
+            100×148mm · 2명 (점선 절취)
+          </span>
+        </div>
+
+        <!-- 엽서 용지 프리뷰 영역 (실제 1200x1776 고해상도 이미지 동기화) -->
+        <div class="preview-backdrop rounded-2xl p-4 sm:p-6 flex flex-col items-center justify-center border border-stone-200">
+          <div class="relative w-full max-w-[340px] sm:max-w-[370px] shadow-xl rounded-sm overflow-hidden bg-white ring-1 ring-black/10">
+            <!-- 모바일/아이패드 길게 눌러 저장하기 지원용 img -->
+            <img id="previewImg" alt="우리 마을 네컷 인화 미리보기" class="w-full h-auto block select-auto" />
+          </div>
+          <p class="mt-3 text-xs text-stone-500 text-center leading-relaxed">
+            📱 아이패드·스마트폰에서는 위 이미지를 <strong>길게 눌러 [사진에 저장]</strong>할 수도 있습니다.
+          </p>
+        </div>
+
+        <!-- 하단 즉시 저장 단축 버튼 -->
+        <div class="mt-4">
+          <button type="button" onclick="downloadPostcard()"
+            class="w-full py-3.5 px-4 bg-emerald-700 hover:bg-emerald-800 active:scale-[0.99] text-white font-bold text-base rounded-2xl shadow-md shadow-emerald-900/10 transition flex items-center justify-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            인화용 고화질 이미지 저장 (100×148mm)
+          </button>
+        </div>
+      </section>
+
+      <!-- [우측 컬럼] 3단계 컨트롤 패널 -->
+      <div class="lg:col-span-7 space-y-6">
+
+        <!-- =========================================================
+             STEP 1: 인쇄 방식 · 프레임(배경) 고르고 한 마디 쓰기
+             ========================================================= -->
+        <section class="bg-white rounded-3xl shadow-sm border border-stone-200/80 p-5 sm:p-6">
+          <div class="flex items-center gap-2.5 mb-5">
+            <span class="w-7 h-7 rounded-full bg-emerald-700 text-white text-sm font-extrabold flex items-center justify-center">1</span>
+            <h2 class="text-lg sm:text-xl font-extrabold text-stone-900">인쇄 방식 · 배경(프레임) 고르고 한 마디 쓰기</h2>
+          </div>
+
+          <!-- 1-1. 엽서 용지 인쇄 분할 방식 -->
+          <div class="mb-6">
+            <label class="block text-sm font-bold text-stone-700 mb-2">
+              📄 엽서 용지 한 장(100×148mm)에 몇 줄로 인쇄할까요?
+            </label>
+            <div class="grid grid-cols-3 gap-2.5" id="layoutModeGroup">
+              <button type="button" data-layout="1"
+                class="layout-btn p-3 rounded-2xl border-2 border-stone-200 bg-stone-50 hover:bg-stone-100 text-left transition">
+                <div class="font-bold text-sm text-stone-800">1명 (큰 1줄)</div>
+                <div class="text-xs text-stone-500 mt-0.5">어르신 선물용 대형</div>
+              </button>
+              <button type="button" data-layout="2"
+                class="layout-btn p-3 rounded-2xl border-2 border-emerald-600 bg-emerald-50/70 text-left transition">
+                <div class="font-bold text-sm text-emerald-900">2명 (같은 2줄)</div>
+                <div class="text-xs text-emerald-700 mt-0.5">가운데 점선 절취 · 추천</div>
+              </button>
+              <button type="button" data-layout="3"
+                class="layout-btn p-3 rounded-2xl border-2 border-stone-200 bg-stone-50 hover:bg-stone-100 text-left transition">
+                <div class="font-bold text-sm text-stone-800">3명 (미니 3줄)</div>
+                <div class="text-xs text-stone-500 mt-0.5">친구들과 3등분 절취</div>
+              </button>
+            </div>
+          </div>
+
+          <!-- 1-2. 기본 마을 테마 프레임 선택 -->
+          <div class="mb-5">
+            <div class="flex items-center justify-between mb-2">
+              <label class="text-sm font-bold text-stone-700">🎨 고창 마을 테마 배경 고르기</label>
+              <span id="activeThemeLabel" class="text-xs font-semibold text-emerald-700">현재: 전통 한지 크림</span>
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-5 gap-2.5" id="themeGroup">
+              <button type="button" data-theme="hanji"
+                class="theme-btn group p-2.5 rounded-2xl border-2 border-emerald-600 bg-amber-50/60 flex flex-col items-center gap-1.5 transition">
+                <span class="w-8 h-8 rounded-full border border-stone-300 shadow-inner" style="background: linear-gradient(135deg, #fbf7ef, #efe5d1);"></span>
+                <span class="text-xs font-bold text-stone-800">전통 한지</span>
+              </button>
+              <button type="button" data-theme="barley"
+                class="theme-btn group p-2.5 rounded-2xl border-2 border-stone-200 bg-white hover:bg-stone-50 flex flex-col items-center gap-1.5 transition">
+                <span class="w-8 h-8 rounded-full border border-stone-300 shadow-inner" style="background: linear-gradient(135deg, #e8f5e3, #77b263);"></span>
+                <span class="text-xs font-bold text-stone-800">청보리밭</span>
+              </button>
+              <button type="button" data-theme="mahasa"
+                class="theme-btn group p-2.5 rounded-2xl border-2 border-stone-200 bg-white hover:bg-stone-50 flex flex-col items-center gap-1.5 transition">
+                <span class="w-8 h-8 rounded-full border border-stone-300 shadow-inner" style="background: linear-gradient(135deg, #f5ede2, #b48a68);"></span>
+                <span class="text-xs font-bold text-stone-800">마하사</span>
+              </button>
+              <button type="button" data-theme="malbawi"
+                class="theme-btn group p-2.5 rounded-2xl border-2 border-stone-200 bg-white hover:bg-stone-50 flex flex-col items-center gap-1.5 transition">
+                <span class="w-8 h-8 rounded-full border border-stone-300 shadow-inner" style="background: linear-gradient(135deg, #fdf0dc, #d98245);"></span>
+                <span class="text-xs font-bold text-stone-800">말바위</span>
+              </button>
+              <button type="button" data-theme="black"
+                class="theme-btn group p-2.5 rounded-2xl border-2 border-stone-200 bg-white hover:bg-stone-50 flex flex-col items-center gap-1.5 transition col-span-2 sm:col-span-1">
+                <span class="w-8 h-8 rounded-full border border-stone-400 shadow-inner" style="background: linear-gradient(135deg, #27272a, #09090b);"></span>
+                <span class="text-xs font-bold text-stone-800">클래식 블랙</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- 1-3. 내 배경 이미지 직접 올리기 (캔바 등 커스텀 이미지) -->
+          <div class="mb-6 p-4 rounded-2xl bg-amber-50/70 border border-amber-200/80">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <div>
+                <h3 class="text-sm font-bold text-amber-950 flex items-center gap-1.5">
+                  🖼️ 내 배경 이미지 직접 올리기 (캔바 작업물 등)
+                </h3>
+                <p class="text-xs text-amber-800/80 mt-0.5">
+                  캔바에서 만든 배경 이미지(PNG/JPG)를 올리면 기본 배경 대신 쏙 들어갑니다.
+                </p>
+              </div>
+              <div class="flex items-center gap-2 shrink-0">
+                <label class="cursor-pointer px-3.5 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs sm:text-sm font-bold rounded-xl shadow-sm transition inline-flex items-center gap-1.5">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  배경 이미지 선택
+                  <input id="inputCustomBg" type="file" accept="image/*" class="hidden" />
+                </label>
+                <button id="btnClearCustomBg" type="button"
+                  class="hidden px-3 py-2 bg-white hover:bg-stone-100 text-stone-700 border border-stone-300 text-xs font-bold rounded-xl transition">
+                  지우기
+                </button>
+              </div>
+            </div>
+
+            <!-- 커스텀 배경 업로드 시 활성화되는 세부 옵션 -->
+            <div id="customBgOptions" class="hidden mt-3 pt-3 border-t border-amber-200/80 grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+              <div>
+                <label class="block text-xs font-bold text-amber-950 mb-1">배경 채우기 방식</label>
+                <select id="selectCustomBgMode" class="w-full text-xs font-semibold rounded-xl border border-amber-300 bg-white px-2.5 py-2 text-stone-800">
+                  <option value="per-strip">줄(스트립)마다 각각 채우기</option>
+                  <option value="full-sheet">엽서 전체(100×148)에 한 장 깔기</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-amber-950 mb-1">글씨 색상</label>
+                <select id="selectCustomTextColor" class="w-full text-xs font-semibold rounded-xl border border-amber-300 bg-white px-2.5 py-2 text-stone-800">
+                  <option value="dark">어두운 글씨 (밝은 배경용)</option>
+                  <option value="light">밝은 흰 글씨 (어두운 배경용)</option>
+                </select>
+              </div>
+              <div class="flex items-end">
+                <label class="w-full flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-amber-300 cursor-pointer select-none">
+                  <input id="chkShowTextOnCustom" type="checkbox" checked class="w-4 h-4 accent-emerald-700 rounded" />
+                  <span class="text-xs font-bold text-stone-800">제목·문구 글씨 표시</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- 1-4. 문구 입력 (제목 / 한 마디 / 날짜) -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <div>
+              <label for="inputTitle" class="block text-xs font-bold text-stone-600 mb-1">프레임 제목</label>
+              <input id="inputTitle" type="text" maxlength="18" value="우리 마을 네컷"
+                placeholder="예: 우리 마을 네컷"
+                class="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 outline-none text-sm font-bold text-stone-900" />
+            </div>
+            <div>
+              <label for="inputDate" class="block text-xs font-bold text-stone-600 mb-1">날짜 및 소속 표기</label>
+              <div class="flex items-center gap-2">
+                <input id="inputDate" type="text" maxlength="24"
+                  class="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 outline-none text-sm font-semibold text-stone-800" />
+                <label class="shrink-0 flex items-center gap-1.5 text-xs font-bold text-stone-600 cursor-pointer select-none">
+                  <input id="chkShowDate" type="checkbox" checked class="w-4 h-4 accent-emerald-700 rounded" />
+                  표시
+                </label>
+              </div>
+            </div>
+            <div class="sm:col-span-2">
+              <label for="inputSubtitle" class="block text-xs font-bold text-stone-600 mb-1">한 마디 쓰기 (소제목 · 기념 문구)</label>
+              <input id="inputSubtitle" type="text" maxlength="32" value="고창의 숨은 보물, 우리의 이야기"
+                placeholder="예: 2026 공음면민축제 기념 · 건강하세요 어르신!"
+                class="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/20 outline-none text-sm font-medium text-stone-800" />
+            </div>
+          </div>
+        </section>
+
+        <!-- =========================================================
+             STEP 2: 사진 4컷 찍기 (카메라 촬영 또는 앨범 선택)
+             ========================================================= -->
+        <section class="bg-white rounded-3xl shadow-sm border border-stone-200/80 p-5 sm:p-6">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
+            <div class="flex items-center gap-2.5">
+              <span class="w-7 h-7 rounded-full bg-emerald-700 text-white text-sm font-extrabold flex items-center justify-center">2</span>
+              <h2 class="text-lg sm:text-xl font-extrabold text-stone-900">사진 4컷 찍기 (또는 앨범에서 고르기)</h2>
+            </div>
+            <span id="photoCountBadge" class="text-xs font-bold px-2.5 py-1 rounded-full bg-stone-100 text-stone-600 self-start sm:self-auto">
+              0 / 4컷 준비됨
+            </span>
+          </div>
+
+          <!-- 메인 촬영 & 앨범 업로드 버튼 -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
+            <button id="btnOpenCamera" type="button"
+              class="py-3.5 px-4 bg-stone-900 hover:bg-stone-800 active:scale-[0.99] text-white font-bold text-sm sm:text-base rounded-2xl shadow-sm transition flex items-center justify-center gap-2">
+              <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              </svg>
+              카메라로 4컷 찍기
+            </button>
+
+            <label class="cursor-pointer py-3.5 px-4 bg-stone-100 hover:bg-stone-200 active:scale-[0.99] text-stone-800 font-bold text-sm sm:text-base rounded-2xl border border-stone-300 transition flex items-center justify-center gap-2">
+              <svg class="w-5 h-5 text-stone-600" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              앨범에서 사진 고르기 (최대 4장)
+              <input id="inputMultiPhotos" type="file" accept="image/*" multiple class="hidden" />
+            </label>
+          </div>
+
+          <!-- 4컷 썸네일 슬롯 그리드 -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5" id="slotsGrid">
+            <!-- JS에서 1컷~4컷 카드 렌더링 -->
+          </div>
+
+          <!-- 개별 슬롯 교체용 숨김 파일 입력 -->
+          <input id="inputSingleSlotPhoto" type="file" accept="image/*" class="hidden" />
+
+          <!-- 사진 색감 보정 필터 -->
+          <div class="pt-4 border-t border-stone-100">
+            <label class="block text-xs font-bold text-stone-600 mb-2">✨ 사진 색감 보정</label>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2" id="filterGroup">
+              <button type="button" data-filter="none"
+                class="filter-btn py-2 px-3 rounded-xl border-2 border-emerald-600 bg-emerald-50 text-emerald-900 text-xs font-bold transition">
+                원본 (자연스럽게)
+              </button>
+              <button type="button" data-filter="bright"
+                class="filter-btn py-2 px-3 rounded-xl border-2 border-stone-200 bg-white hover:bg-stone-50 text-stone-700 text-xs font-bold transition">
+                화사하게 (인물 추천)
+              </button>
+              <button type="button" data-filter="warm"
+                class="filter-btn py-2 px-3 rounded-xl border-2 border-stone-200 bg-white hover:bg-stone-50 text-stone-700 text-xs font-bold transition">
+                따뜻한 필름
+              </button>
+              <button type="button" data-filter="bw"
+                class="filter-btn py-2 px-3 rounded-xl border-2 border-stone-200 bg-white hover:bg-stone-50 text-stone-700 text-xs font-bold transition">
+                흑백 감성
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- =========================================================
+             STEP 3: 저장하고 인화하기 (셀피 가장자리 잘림 보정)
+             ========================================================= -->
+        <section class="bg-white rounded-3xl shadow-sm border border-stone-200/80 p-5 sm:p-6">
+          <div class="flex items-center gap-2.5 mb-4">
+            <span class="w-7 h-7 rounded-full bg-emerald-700 text-white text-sm font-extrabold flex items-center justify-center">3</span>
+            <h2 class="text-lg sm:text-xl font-extrabold text-stone-900">저장하고 셀피로 인화하기</h2>
+          </div>
+
+          <!-- 셀피 가장자리 잘림 보정 설정 -->
+          <div class="mb-5 p-4 rounded-2xl bg-stone-50 border border-stone-200">
+            <div class="flex items-start justify-between gap-2 mb-2">
+              <div>
+                <label class="block text-sm font-bold text-stone-800">
+                  ✂️ 가장자리 잘림 보정 (캐논 셀피 전용)
+                </label>
+                <p class="text-xs text-stone-500 mt-0.5">
+                  셀피 프린터는 '여백 없음' 인쇄 시 바깥쪽(특히 오른쪽·아래쪽)을 살짝 잘라냅니다. 안쪽 안전 여백을 두면 글씨와 사진이 잘리지 않습니다.
+                </p>
+              </div>
+            </div>
+            <div class="grid grid-cols-3 gap-2 mt-3" id="bleedGroup">
+              <button type="button" data-bleed="0"
+                class="bleed-btn py-2 px-2.5 rounded-xl border-2 border-stone-200 bg-white hover:bg-stone-100 text-xs font-bold text-stone-700 transition">
+                보정 없음 (0%)
+              </button>
+              <button type="button" data-bleed="3"
+                class="bleed-btn py-2 px-2.5 rounded-xl border-2 border-emerald-600 bg-emerald-50 text-xs font-bold text-emerald-900 transition">
+                표준 보정 (3% · 추천)
+              </button>
+              <button type="button" data-bleed="5"
+                class="bleed-btn py-2 px-2.5 rounded-xl border-2 border-stone-200 bg-white hover:bg-stone-100 text-xs font-bold text-stone-700 transition">
+                넉넉한 보정 (5%)
+              </button>
+            </div>
+          </div>
+
+          <!-- 저장 버튼 및 인쇄 안내 -->
+          <button type="button" onclick="downloadPostcard()"
+            class="w-full py-4 px-5 bg-emerald-700 hover:bg-emerald-800 active:scale-[0.99] text-white font-extrabold text-base sm:text-lg rounded-2xl shadow-md shadow-emerald-900/15 transition flex items-center justify-center gap-2.5">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            인화용 이미지 저장하기 (PNG)
+          </button>
+
+          <div class="mt-4 p-3.5 rounded-2xl bg-emerald-50/70 border border-emerald-200/80 text-xs text-emerald-950 space-y-1.5 leading-relaxed">
+            <div class="font-bold flex items-center gap-1.5">
+              🖨️ 캐논 SELPHY 인쇄 방법
+            </div>
+            <p>1. <strong>SELPHY Photo Layout</strong> 앱을 열고 <strong>[엽서 크기 (100×148mm)]</strong>를 선택합니다.</p>
+            <p>2. 레이아웃은 <strong>[1매 배치 / 여백 없음]</strong>으로 설정해 저장한 이미지를 불러옵니다.</p>
+            <p>3. 인화 후 가운데 <strong>점선(✂)</strong>을 따라 가위로 자르면 어르신과 학생이 한 줄씩 나눠 가질 수 있습니다.</p>
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- =========================================================
+       카메라 촬영 모달
+       ========================================================= -->
+  <div id="cameraModal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5">
+    <div class="bg-stone-900 text-white w-full max-w-2xl rounded-3xl overflow-hidden shadow-2xl border border-stone-700 flex flex-col max-h-[95vh]">
+
+      <!-- 모달 헤더 -->
+      <div class="px-4 sm:px-5 py-3.5 bg-stone-950 flex items-center justify-between border-b border-stone-800">
+        <div class="flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse"></span>
+          <h3 class="font-extrabold text-base sm:text-lg" id="cameraModalTitle">포토부스 카메라 (4컷 촬영)</h3>
+        </div>
+        <button id="btnCloseCamera" type="button"
+          class="p-2 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-300 hover:text-white transition" aria-label="닫기">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- 뷰파인더 영역 -->
+      <div class="relative bg-black flex-1 min-h-[260px] sm:min-h-[360px] flex items-center justify-center overflow-hidden">
+        <video id="cameraVideo" autoplay playsinline muted class="w-full h-full object-cover max-h-[52vh]"></video>
+
+        <!-- 촬영 구도 가이드 라인 (4:3 / 3:2 프레임 안내) -->
+        <div id="cameraGuideOverlay" class="pointer-events-none absolute inset-4 sm:inset-6 border-2 border-white/35 rounded-2xl flex flex-col justify-between p-3">
+          <div class="flex justify-between items-center">
+            <span id="cameraTargetBadge" class="px-3 py-1 rounded-full bg-black/60 text-xs font-bold text-emerald-300 border border-white/15">
+              1컷 촬영 대기 중
+            </span>
+            <span class="px-2.5 py-1 rounded-full bg-black/50 text-[11px] text-stone-300">
+              얼굴이 가운데 오도록 맞춰주세요
+            </span>
+          </div>
+          <div class="text-center">
+            <span id="cameraStatusHint" class="px-3 py-1 rounded-full bg-black/50 text-xs text-white/90">
+              웃는 표정으로 준비해 주세요 😊
+            </span>
+          </div>
+        </div>
+
+        <!-- 카운트다운 숫자 오버레이 -->
+        <div id="countdownOverlay" class="hidden pointer-events-none absolute inset-0 flex items-center justify-center bg-black/25">
+          <span id="countdownNumber" class="text-8xl sm:text-9xl font-black text-white drop-shadow-[0_4px_24px_rgba(0,0,0,0.8)]">3</span>
+        </div>
+
+        <!-- 셔터 플래시 효과 -->
+        <div id="shutterFlashOverlay" class="hidden pointer-events-none absolute inset-0 bg-white"></div>
+
+        <!-- 카메라 오류 / 권한 안내 fallback 카드 -->
+        <div id="cameraErrorBox" class="hidden p-6 text-center max-w-md mx-auto">
+          <div class="w-14 h-14 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center mx-auto mb-3">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <h4 class="text-base sm:text-lg font-bold text-white mb-1.5">카메라를 열 수 없습니다</h4>
+          <p id="cameraErrorMsg" class="text-xs sm:text-sm text-stone-300 leading-relaxed mb-4">
+            브라우저에서 카메라 권한을 허용해 주시거나, 기기에 연결된 카메라를 확인해 주세요.
+          </p>
+          <div class="flex flex-col sm:flex-row gap-2 justify-center">
+            <button type="button" onclick="startCamera()"
+              class="px-4 py-2.5 rounded-xl bg-stone-700 hover:bg-stone-600 text-xs sm:text-sm font-bold text-white transition">
+              🔄 카메라 다시 시도
+            </button>
+            <button type="button" onclick="closeCameraModal(); document.getElementById('inputMultiPhotos').click();"
+              class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs sm:text-sm font-bold text-white transition">
+              🖼️ 앨범에서 사진 고르기
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 촬영 진행 썸네일 바 (1~4컷 실시간 확인) -->
+      <div class="px-4 py-2.5 bg-stone-950 border-t border-stone-800">
+        <div class="grid grid-cols-4 gap-2" id="modalMiniSlots">
+          <!-- JS로 1~4컷 미니 썸네일 표시 -->
+        </div>
+      </div>
+
+      <!-- 하단 카메라 컨트롤 바 -->
+      <div class="p-4 bg-stone-900 border-t border-stone-800 space-y-3">
+        <!-- 보조 설정: 타이머 / 전후면 전환 / 좌우 반전 -->
+        <div class="flex flex-wrap items-center justify-between gap-2 text-xs">
+          <div class="flex items-center gap-1.5 bg-stone-800 p-1 rounded-xl">
+            <span class="px-2 text-stone-400 font-semibold">타이머</span>
+            <button type="button" data-timer="0" class="timer-btn px-2.5 py-1 rounded-lg font-bold text-stone-300 hover:text-white">즉시</button>
+            <button type="button" data-timer="3" class="timer-btn px-2.5 py-1 rounded-lg font-bold bg-emerald-600 text-white">3초</button>
+            <button type="button" data-timer="5" class="timer-btn px-2.5 py-1 rounded-lg font-bold text-stone-300 hover:text-white">5초</button>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button id="btnToggleMirror" type="button"
+              class="px-3 py-1.5 rounded-xl bg-stone-800 hover:bg-stone-700 text-emerald-300 font-bold border border-stone-700 transition">
+              ↔ 좌우반전 ON
+            </button>
+            <button id="btnSwitchFacing" type="button"
+              class="px-3 py-1.5 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-200 font-bold border border-stone-700 transition">
+              🔄 전/후면 전환
+            </button>
+          </div>
+        </div>
+
+        <!-- 촬영 실행 버튼 -->
+        <div class="grid grid-cols-2 gap-2.5">
+          <button id="btnCaptureSingle" type="button"
+            class="py-3 px-4 rounded-2xl bg-stone-700 hover:bg-stone-600 font-bold text-sm text-white transition flex items-center justify-center gap-1.5">
+            📸 현재 컷(1장)만 찍기
+          </button>
+          <button id="btnCaptureAuto4" type="button"
+            class="py-3 px-4 rounded-2xl bg-emerald-600 hover:bg-emerald-500 font-extrabold text-sm text-white shadow-lg shadow-emerald-950/50 transition flex items-center justify-center gap-1.5">
+            🎬 4컷 자동 연속 촬영
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 토스트 알림 메시지 -->
+  <div id="toastContainer" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 pointer-events-none flex flex-col items-center gap-2"></div>
+
+  <!-- 고해상도 인화용 캔버스 (1200 x 1776 px = 100 x 148 mm 정확 비율) -->
+  <canvas id="printCanvas" width="1200" height="1776" class="hidden"></canvas>
+
+  <script>
+    /**
+     * ============================================================================
+     * [우리 마을 네컷] 애플리케이션 상태 및 핵심 로직
+     * - 1200 x 1776 px (100 x 148 mm 캐논 셀피 엽서 규격) 고해상도 렌더링
+     * - 1명 / 2명 / 3명 분할 인쇄 + 점선 절취선
+     * - 고창 마을 5종 테마 + 사용자 커스텀 배경(캔바 등) 업로드 및 채우기 모드 지원
+     * ============================================================================
+     */
+
+    // 오늘 날짜 기본 문자열 생성 (YYYY.MM.DD)
+    function getTodayFormatted() {
+      const now = new Date();
+      const y = now.getFullYear();
+      const m = String(now.getMonth() + 1).padStart(2, '0');
+      const d = String(now.getDate()).padStart(2, '0');
+      return `${y}.${m}.${d} · 고창 마을 기록단`;
+    }
+
+    // 전역 상태 객체
+    const state = {
+      layoutMode: 2,              // 1: 1명(큰1줄), 2: 2명(같은2줄), 3: 3명(미니3줄)
+      theme: 'hanji',             // 'hanji' | 'barley' | 'mahasa' | 'malbawi' | 'black'
+      customBgImg: null,          // 업로드된 커스텀 배경 HTMLImageElement
+      customBgMode: 'per-strip',  // 'per-strip' (줄마다) | 'full-sheet' (엽서 전체)
+      customTextColor: 'dark',    // 'dark' | 'light'
+      showTextOnCustom: true,     // 커스텀 배경 사용 시 글씨 표시 여부
+      title: '우리 마을 네컷',
+      subtitle: '고창의 숨은 보물, 우리의 이야기',
+      dateText: getTodayFormatted(),
+      showDate: true,
+      photos: [null, null, null, null], // 4컷 HTMLImageElement 배열
+      filter: 'none',             // 'none' | 'bright' | 'warm' | 'bw'
+      bleedPercent: 3,            // 0 | 3 | 5 (캐논 셀피 가장자리 잘림 보정 %)
+      // 카메라 상태
+      stream: null,
+      facingMode: 'user',
+      mirror: true,
+      timerSec: 3,
+      activeSlotIndex: 0,         // 현재 촬영 대상 컷 인덱스 (0~3)
+      isAutoShooting: false,
+      autoShootAbort: false
+    };
+
+    const THEME_NAMES = {
+      hanji: '전통 한지 크림',
+      barley: '공음면 청보리밭',
+      mahasa: '천년고찰 마하사',
+      malbawi: '전설의 말바위',
+      black: '클래식 블랙'
+    };
+
+    // DOM 참조 캐싱
+    const printCanvas = document.getElementById('printCanvas');
+    const ctx = printCanvas.getContext('2d');
+    const previewImg = document.getElementById('previewImg');
+
+    // 토스트 알림 함수 (alert 대신 사용)
+    function showToast(message) {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = 'px-4 py-2.5 rounded-2xl bg-stone-900/95 text-white text-xs sm:text-sm font-bold shadow-xl border border-stone-700 transition-all duration-300 opacity-0 translate-y-2';
+      toast.textContent = message;
+      container.appendChild(toast);
+      requestAnimationFrame(() => {
+        toast.classList.remove('opacity-0', 'translate-y-2');
+      });
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+      }, 2600);
+    }
+
+    // 셔터 효과음 (외부 음원 URL 없이 Web Audio API로 합성)
+    function playShutterSound() {
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        const audioCtx = new AudioCtx();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(220, audioCtx.currentTime + 0.09);
+        gain.gain.setValueAtTime(0.22, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.11);
+      } catch (e) {
+        // 오디오 정책 제한 시 무시
+      }
+    }
+
+    /**
+     * 이미지를 지정된 사각형 영역에 비율 유지하며 꽉 차게(object-fit: cover) 그리기
+     */
+    function drawImageCover(targetCtx, img, x, y, w, h, filterCss = 'none') {
+      if (!img) return;
+      const imgW = img.naturalWidth || img.width;
+      const imgH = img.naturalHeight || img.height;
+      if (!imgW || !imgH) return;
+
+      const scale = Math.max(w / imgW, h / imgH);
+      const drawW = imgW * scale;
+      const drawH = imgH * scale;
+      const offsetX = x + (w - drawW) / 2;
+      const offsetY = y + (h - drawH) / 2;
+
+      targetCtx.save();
+      targetCtx.beginPath();
+      targetCtx.rect(x, y, w, h);
+      targetCtx.clip();
+      if (filterCss && filterCss !== 'none') {
+        targetCtx.filter = filterCss;
+      }
+      targetCtx.drawImage(img, offsetX, offsetY, drawW, drawH);
+      targetCtx.restore();
+    }
+
+    /**
+     * 사진 색감 필터 CSS 문자열 반환
+     */
+    function getCanvasFilterString(filterKey) {
+      switch (filterKey) {
+        case 'bright':
+          return 'brightness(1.09) contrast(1.03) saturate(1.08)';
+        case 'warm':
+          return 'brightness(1.04) contrast(1.02) sepia(0.18) saturate(1.15)';
+        case 'bw':
+          return 'grayscale(1) contrast(1.15) brightness(1.03)';
+        default:
+          return 'none';
+      }
+    }
+
+    /**
+     * 고창 마을 기본 테마 배경 및 장식 일러스트 렌더링
+     * @param {CanvasRenderingContext2D} c
+     * @param {Object} rect - { x, y, w, h } 스트립(또는 전체 영역) 좌표
+     * @param {string} themeKey
+     */
+    function drawThemeBackground(c, rect, themeKey) {
+      const { x, y, w, h } = rect;
+      c.save();
+      c.beginPath();
+      c.rect(x, y, w, h);
+      c.clip();
+
+      if (themeKey === 'hanji') {
+        // 1. 전통 한지 크림
+        c.fillStyle = '#FAF5EB';
+        c.fillRect(x, y, w, h);
+
+        // 은은한 한지 결 표현
+        c.strokeStyle = 'rgba(180, 155, 115, 0.13)';
+        c.lineWidth = 1.5;
+        for (let i = 0; i < 45; i++) {
+          const px = x + ((i * 73) % Math.max(1, Math.floor(w)));
+          const py = y + ((i * 137) % Math.max(1, Math.floor(h)));
+          c.beginPath();
+          c.moveTo(px, py);
+          c.quadraticCurveTo(px + 25, py + 8, px + 50, py - 4);
+          c.stroke();
+        }
+
+        // 전통 이중 테두리선
+        const inset = Math.max(12, w * 0.032);
+        c.strokeStyle = 'rgba(138, 102, 58, 0.35)';
+        c.lineWidth = 2;
+        c.strokeRect(x + inset, y + inset, w - inset * 2, h - inset * 2);
+
+      } else if (themeKey === 'barley') {
+        // 2. 공음면 청보리밭
+        const grad = c.createLinearGradient(x, y, x, y + h);
+        grad.addColorStop(0, '#F3F9F0');
+        grad.addColorStop(0.78, '#E4F2DD');
+        grad.addColorStop(1, '#CBE4BE');
+        c.fillStyle = grad;
+        c.fillRect(x, y, w, h);
+
+        // 하단 부드러운 청보리 언덕 곡선
+        c.fillStyle = 'rgba(116, 173, 94, 0.25)';
+        c.beginPath();
+        c.moveTo(x, y + h);
+        c.lineTo(x, y + h - 115);
+        c.quadraticCurveTo(x + w * 0.35, y + h - 155, x + w, y + h - 95);
+        c.lineTo(x + w, y + h);
+        c.closePath();
+        c.fill();
+
+        // 보리 이삭 심플 일러스트 (좌우 하단 코너)
+        c.strokeStyle = '#5D9648';
+        c.fillStyle = '#6FA858';
+        c.lineWidth = 2.2;
+        const drawBarleyStalk = (bx, by, tilt) => {
+          c.save();
+          c.translate(bx, by);
+          c.rotate(tilt);
+          c.beginPath();
+          c.moveTo(0, 0);
+          c.lineTo(0, -68);
+          c.stroke();
+          for (let k = 0; k < 4; k++) {
+            const ky = -28 - k * 10;
+            c.beginPath();
+            c.ellipse(-5, ky, 3, 6, -0.4, 0, Math.PI * 2);
+            c.ellipse(5, ky - 3, 3, 6, 0.4, 0, Math.PI * 2);
+            c.fill();
+          }
+          c.restore();
+        };
+        drawBarleyStalk(x + 28, y + h - 12, -0.18);
+        drawBarleyStalk(x + 46, y + h - 10, 0.12);
+        drawBarleyStalk(x + w - 32, y + h - 12, 0.16);
+
+      } else if (themeKey === 'mahasa') {
+        // 3. 천년고찰 마하사
+        const grad = c.createLinearGradient(x, y, x, y + h);
+        grad.addColorStop(0, '#F7F1E8');
+        grad.addColorStop(1, '#EADCCE');
+        c.fillStyle = grad;
+        c.fillRect(x, y, w, h);
+
+        // 은은한 산 능선 실루엣
+        c.fillStyle = 'rgba(142, 152, 134, 0.22)';
+        c.beginPath();
+        c.moveTo(x, y + h);
+        c.lineTo(x, y + h - 130);
+        c.quadraticCurveTo(x + w * 0.28, y + h - 185, x + w * 0.62, y + h - 120);
+        c.quadraticCurveTo(x + w * 0.85, y + h - 145, x + w, y + h - 105);
+        c.lineTo(x + w, y + h);
+        c.closePath();
+        c.fill();
+
+        // 단청 포인트 라인
+        c.fillStyle = '#9E4736';
+        c.fillRect(x + w * 0.25, y + h - 22, w * 0.5, 4);
+
+      } else if (themeKey === 'malbawi') {
+        // 4. 전설의 말바위
+        const grad = c.createLinearGradient(x, y, x, y + h);
+        grad.addColorStop(0, '#FEF6EA');
+        grad.addColorStop(0.75, '#FBE5C4');
+        grad.addColorStop(1, '#F2CCA0');
+        c.fillStyle = grad;
+        c.fillRect(x, y, w, h);
+
+        // 하단 가을 단풍빛 언덕 & 바위 실루엣
+        c.fillStyle = 'rgba(181, 101, 59, 0.22)';
+        c.beginPath();
+        c.moveTo(x, y + h);
+        c.lineTo(x, y + h - 90);
+        c.quadraticCurveTo(x + w * 0.5, y + h - 145, x + w, y + h - 85);
+        c.lineTo(x + w, y + h);
+        c.closePath();
+        c.fill();
+
+      } else if (themeKey === 'black') {
+        // 5. 클래식 블랙
+        c.fillStyle = '#18181B';
+        c.fillRect(x, y, w, h);
+
+        // 상단·하단 얇은 골드 라인
+        c.strokeStyle = 'rgba(234, 179, 8, 0.45)';
+        c.lineWidth = 2;
+        const inset = Math.max(12, w * 0.032);
+        c.strokeRect(x + inset, y + inset, w - inset * 2, h - inset * 2);
+      }
+
+      c.restore();
+    }
+
+    /**
+     * 테마별 텍스트 및 사진 프레임 색상 스타일 반환
+     */
+    function getThemeColors() {
+      if (state.customBgImg) {
+        if (state.customTextColor === 'light') {
+          return {
+            title: '#FFFFFF',
+            subtitle: '#F4F4F5',
+            date: '#E4E4E7',
+            photoBorder: '#FFFFFF',
+            emptyBg: 'rgba(255, 255, 255, 0.2)',
+            emptyText: '#FFFFFF',
+            accent: '#FDE047',
+            shadow: 'rgba(0, 0, 0, 0.55)'
+          };
+        } else {
+          return {
+            title: '#1C1917',
+            subtitle: '#44403C',
+            date: '#57534E',
+            photoBorder: '#FFFFFF',
+            emptyBg: 'rgba(255, 255, 255, 0.78)',
+            emptyText: '#78716C',
+            accent: '#B45309',
+            shadow: 'rgba(255, 255, 255, 0.7)'
+          };
+        }
+      }
+
+      switch (state.theme) {
+        case 'barley':
+          return {
+            title: '#1B4322',
+            subtitle: '#2F6338',
+            date: '#4D7C55',
+            photoBorder: '#FFFFFF',
+            emptyBg: '#FFFFFF',
+            emptyText: '#76997C',
+            accent: '#4B823B',
+            shadow: null
+          };
+        case 'mahasa':
+          return {
+            title: '#2E221B',
+            subtitle: '#5C4538',
+            date: '#7D6354',
+            photoBorder: '#FFFDF9',
+            emptyBg: '#FFFDF9',
+            emptyText: '#9A8476',
+            accent: '#9E4736',
+            shadow: null
+          };
+        case 'malbawi':
+          return {
+            title: '#3B1E10',
+            subtitle: '#6E3B22',
+            date: '#8C5336',
+            photoBorder: '#FFFDF9',
+            emptyBg: '#FFFDF9',
+            emptyText: '#A8795E',
+            accent: '#B5653B',
+            shadow: null
+          };
+        case 'black':
+          return {
+            title: '#FFFFFF',
+            subtitle: '#FDE047',
+            date: '#A1A1AA',
+            photoBorder: '#FFFFFF',
+            emptyBg: '#27272A',
+            emptyText: '#71717A',
+            accent: '#EAB308',
+            shadow: null
+          };
+        case 'hanji':
+        default:
+          return {
+            title: '#332416',
+            subtitle: '#5E4630',
+            date: '#7C6249',
+            photoBorder: '#FFFFFF',
+            emptyBg: '#FFFDF8',
+            emptyText: '#A38E78',
+            accent: '#8A663A',
+            shadow: null
+          };
+      }
+    }
+
+    /**
+     * 1200 x 1776 고해상도 캔버스 전체 렌더링 (핵심 엔진)
+     */
+    function renderCanvas() {
+      const W = 1200;
+      const H = 1776;
+      ctx.clearRect(0, 0, W, H);
+
+      // 1. 셀피 가장자리 잘림 보정에 따른 안전 영역(safeRect) 계산
+      // 셀피는 특히 오른쪽과 아래쪽을 조금 더 잘라내므로 비대칭 여백 적용
+      let padLeft = 0, padRight = 0, padTop = 0, padBottom = 0;
+      if (state.bleedPercent === 3) {
+        padLeft = 32; padRight = 40; padTop = 44; padBottom = 56;
+      } else if (state.bleedPercent === 5) {
+        padLeft = 54; padRight = 66; padTop = 76; padBottom = 92;
+      }
+      const safeRect = {
+        x: padLeft,
+        y: padTop,
+        w: W - padLeft - padRight,
+        h: H - padTop - padBottom
+      };
+
+      // 2. 전체 용지 바탕(Bleed 영역 포함) 먼저 채우기 (인쇄 시 흰 테두리 방지)
+      if (state.customBgImg && state.customBgMode === 'full-sheet') {
+        drawImageCover(ctx, state.customBgImg, 0, 0, W, H);
+      } else if (!state.customBgImg) {
+        drawThemeBackground(ctx, { x: 0, y: 0, w: W, h: H }, state.theme);
+      } else {
+        // per-strip 커스텀 배경일 때 외곽 여백은 깔끔한 톤으로 채움
+        ctx.fillStyle = state.customTextColor === 'light' ? '#18181B' : '#FAF7F2';
+        ctx.fillRect(0, 0, W, H);
+      }
+
+      // 3. 인쇄 방식(1명 / 2명 / 3명)에 따른 스트립 목록 계산
+      const strips = [];
+      if (state.layoutMode === 1) {
+        // 1명 (큰 1줄): 사진 비율이 지나치게 가로로 퍼지지 않도록 중앙 700px 폭 배치
+        const stripW = Math.min(safeRect.w, 700);
+        const stripX = safeRect.x + (safeRect.w - stripW) / 2;
+        strips.push({ x: stripX, y: safeRect.y, w: stripW, h: safeRect.h });
+      } else if (state.layoutMode === 2) {
+        // 2명 (같은 2줄 · 좌우 균등 분할)
+        const stripW = safeRect.w / 2;
+        strips.push({ x: safeRect.x, y: safeRect.y, w: stripW, h: safeRect.h });
+        strips.push({ x: safeRect.x + stripW, y: safeRect.y, w: stripW, h: safeRect.h });
+      } else if (state.layoutMode === 3) {
+        // 3명 (미니 3줄 · 3등분)
+        const stripW = safeRect.w / 3;
+        strips.push({ x: safeRect.x, y: safeRect.y, w: stripW, h: safeRect.h });
+        strips.push({ x: safeRect.x + stripW, y: safeRect.y, w: stripW, h: safeRect.h });
+        strips.push({ x: safeRect.x + stripW * 2, y: safeRect.y, w: stripW, h: safeRect.h });
+      }
+
+      const colors = getThemeColors();
+      const filterCss = getCanvasFilterString(state.filter);
+      const useSerif = (state.theme === 'hanji' || state.theme === 'mahasa') && !state.customBgImg;
+      const titleFontFamily = useSerif ? "'Gowun Batang', 'Noto Sans KR', serif" : "'Noto Sans KR', sans-serif";
+
+      // 4. 각 스트립 렌더링
+      strips.forEach((strip) => {
+        // 스트립 개별 배경 그리기 (full-sheet 모드가 아닐 때)
+        if (state.customBgImg && state.customBgMode === 'per-strip') {
+          drawImageCover(ctx, state.customBgImg, strip.x, strip.y, strip.w, strip.h);
+        } else if (!state.customBgImg) {
+          drawThemeBackground(ctx, strip, state.theme);
+        }
+
+        // 스트립 내부 여백 및 4컷 사진 치수 계산
+        const padX = state.layoutMode === 3 ? 22 : (state.layoutMode === 1 ? 42 : 34);
+        const padTop = state.layoutMode === 3 ? 34 : 38;
+        const gapY = state.layoutMode === 3 ? 18 : 20;
+        const photoW = strip.w - padX * 2;
+        const photoH = state.layoutMode === 3 ? 314 : 324;
+
+        // 4개의 사진 슬롯 렌더링
+        for (let i = 0; i < 4; i++) {
+          const px = strip.x + padX;
+          const py = strip.y + padTop + i * (photoH + gapY);
+
+          // 사진 테두리(매트) 배경
+          ctx.save();
+          ctx.fillStyle = colors.photoBorder;
+          ctx.fillRect(px - 3, py - 3, photoW + 6, photoH + 6);
+          ctx.restore();
+
+          const photoImg = state.photos[i];
+          if (photoImg) {
+            drawImageCover(ctx, photoImg, px, py, photoW, photoH, filterCss);
+          } else {
+            // 빈 슬롯 플레이스홀더
+            ctx.save();
+            ctx.fillStyle = colors.emptyBg;
+            ctx.fillRect(px, py, photoW, photoH);
+
+            ctx.strokeStyle = colors.emptyText;
+            ctx.globalAlpha = 0.45;
+            ctx.setLineDash([8, 8]);
+            ctx.lineWidth = 2;
+            ctx.strokeRect(px + 10, py + 10, photoW - 20, photoH - 20);
+            ctx.restore();
+
+            ctx.save();
+            ctx.fillStyle = colors.emptyText;
+            ctx.font = `700 ${state.layoutMode === 3 ? 22 : 28}px 'Noto Sans KR', sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(`${i + 1}컷 사진`, px + photoW / 2, py + photoH / 2);
+            ctx.restore();
+          }
+        }
+
+        // 하단 푸터 텍스트(제목, 한 마디, 날짜) 렌더링
+        const shouldDrawText = !state.customBgImg || state.showTextOnCustom;
+        if (shouldDrawText) {
+          const photosBottom = strip.y + padTop + 4 * photoH + 3 * gapY;
+          const footerTop = photosBottom + 18;
+          const footerBottom = strip.y + strip.h - 24;
+          const footerCenterY = (footerTop + footerBottom) / 2;
+          const centerX = strip.x + strip.w / 2;
+
+          ctx.save();
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+
+          if (colors.shadow) {
+            ctx.shadowColor = colors.shadow;
+            ctx.shadowBlur = 8;
+          }
+
+          // 포인트 장식 도트/라인
+          ctx.fillStyle = colors.accent;
+          ctx.beginPath();
+          ctx.arc(centerX, footerCenterY - (state.layoutMode === 3 ? 64 : 62), 4, 0, Math.PI * 2);
+          ctx.fill();
+
+          // 메인 제목
+          const titleSize = state.layoutMode === 3 ? 28 : (state.layoutMode === 1 ? 42 : 36);
+          ctx.fillStyle = colors.title;
+          ctx.font = `800 ${titleSize}px ${titleFontFamily}`;
+          const titleText = (state.title || '').trim() || '우리 마을 네컷';
+          ctx.fillText(titleText, centerX, footerCenterY - (state.layoutMode === 3 ? 26 : 24), strip.w - padX * 1.4);
+
+          // 소제목 / 한 마디
+          const subText = (state.subtitle || '').trim();
+          if (subText) {
+            const subSize = state.layoutMode === 3 ? 17 : (state.layoutMode === 1 ? 24 : 21);
+            ctx.fillStyle = colors.subtitle;
+            ctx.font = `600 ${subSize}px 'Noto Sans KR', sans-serif`;
+            ctx.fillText(subText, centerX, footerCenterY + (state.layoutMode === 3 ? 14 : 18), strip.w - padX * 1.3);
+          }
+
+          // 날짜 및 소속 표기
+          if (state.showDate && (state.dateText || '').trim()) {
+            const dateSize = state.layoutMode === 3 ? 14 : (state.layoutMode === 1 ? 20 : 18);
+            ctx.fillStyle = colors.date;
+            ctx.font = `500 ${dateSize}px 'Noto Sans KR', sans-serif`;
+            ctx.fillText(state.dateText.trim(), centerX, footerCenterY + (state.layoutMode === 3 ? 48 : 54), strip.w - padX * 1.3);
+          }
+
+          ctx.restore();
+        }
+      });
+
+      // 5. 분할 절취선 (점선 + 가위 아이콘) 그리기
+      const cutLineColor = (state.theme === 'black' && !state.customBgImg) || (state.customBgImg && state.customTextColor === 'light')
+        ? 'rgba(255, 255, 255, 0.55)'
+        : 'rgba(68, 64, 60, 0.45)';
+
+      const drawVerticalCutLine = (lineX) => {
+        ctx.save();
+        ctx.strokeStyle = cutLineColor;
+        ctx.lineWidth = 2.5;
+        ctx.setLineDash([14, 12]);
+        ctx.beginPath();
+        ctx.moveTo(lineX, 16);
+        ctx.lineTo(lineX, H - 16);
+        ctx.stroke();
+
+        // 상단·하단 가위 표시
+        ctx.setLineDash([]);
+        ctx.fillStyle = cutLineColor;
+        ctx.font = '700 22px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('✂', lineX, 34);
+        ctx.fillText('✂', lineX, H - 18);
+        ctx.restore();
+      };
+
+      if (state.layoutMode === 1 && strips[0].x > 40) {
+        // 1명 큰 줄 좌우 외곽 절취선
+        drawVerticalCutLine(strips[0].x);
+        drawVerticalCutLine(strips[0].x + strips[0].w);
+      } else if (state.layoutMode === 2) {
+        // 2명 가운데 절취선
+        drawVerticalCutLine(safeRect.x + safeRect.w / 2);
+      } else if (state.layoutMode === 3) {
+        // 3명 1/3, 2/3 절취선
+        drawVerticalCutLine(safeRect.x + safeRect.w / 3);
+        drawVerticalCutLine(safeRect.x + (safeRect.w * 2) / 3);
+      }
+
+      // 6. 고해상도 캔버스 결과를 미리보기 <img> 태그에 즉시 반영
+      try {
+        previewImg.src = printCanvas.toDataURL('image/png');
+      } catch (err) {
+        console.error('미리보기 변환 오류:', err);
+      }
+    }
+
+    /**
+     * Step 2의 4컷 슬롯 그리드 및 카메라 모달 내 미니 썸네일 UI 갱신
+     */
+    function updateSlotsUI() {
+      const grid = document.getElementById('slotsGrid');
+      const modalMini = document.getElementById('modalMiniSlots');
+      const countBadge = document.getElementById('photoCountBadge');
+
+      const filledCount = state.photos.filter(Boolean).length;
+      countBadge.textContent = `${filledCount} / 4컷 준비됨`;
+      countBadge.className = filledCount === 4
+        ? 'text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 self-start sm:self-auto'
+        : 'text-xs font-bold px-2.5 py-1 rounded-full bg-stone-100 text-stone-600 self-start sm:self-auto';
+
+      grid.innerHTML = '';
+      modalMini.innerHTML = '';
+
+      for (let i = 0; i < 4; i++) {
+        const img = state.photos[i];
+
+        // 메인 화면 슬롯 카드
+        const card = document.createElement('div');
+        card.className = 'relative rounded-2xl border-2 border-stone-200 bg-stone-50 overflow-hidden flex flex-col';
+
+        const thumbArea = document.createElement('div');
+        thumbArea.className = 'aspect-[4/3] w-full bg-stone-200/70 relative flex items-center justify-center overflow-hidden cursor-pointer group';
+        thumbArea.title = `${i + 1}컷 사진 변경`;
+        thumbArea.onclick = () => triggerSingleSlotAlbum(i);
+
+        if (img) {
+          const thumbImg = document.createElement('img');
+          thumbImg.src = img.src;
+          thumbImg.alt = `${i + 1}컷`;
+          thumbImg.className = 'w-full h-full object-cover';
+          thumbArea.appendChild(thumbImg);
+        } else {
+          thumbArea.innerHTML = `
+            <div class="text-center p-2">
+              <div class="text-xs font-extrabold text-stone-400">${i + 1}컷</div>
+              <div class="text-[11px] text-stone-400 mt-0.5">터치하여 추가</div>
+            </div>
+          `;
+        }
+
+        // 좌측 상단 번호 뱃지
+        const numBadge = document.createElement('span');
+        numBadge.className = 'absolute top-1.5 left-1.5 px-2 py-0.5 rounded-md bg-black/65 text-white text-[11px] font-bold';
+        numBadge.textContent = `${i + 1}컷`;
+        thumbArea.appendChild(numBadge);
+
+        card.appendChild(thumbArea);
+
+        // 하단 미니 액션 버튼 (이 컷만 다시 찍기 / 앨범 / 삭제)
+        const actions = document.createElement('div');
+        actions.className = 'p-1.5 bg-white border-t border-stone-200 flex items-center justify-between gap-1 text-[11px] font-bold';
+
+        const btnCam = document.createElement('button');
+        btnCam.type = 'button';
+        btnCam.className = 'flex-1 py-1 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-700 transition';
+        btnCam.textContent = '📷 찍기';
+        btnCam.onclick = () => openCameraForSlot(i);
+
+        const btnAlbum = document.createElement('button');
+        btnAlbum.type = 'button';
+        btnAlbum.className = 'flex-1 py-1 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-700 transition';
+        btnAlbum.textContent = '🖼️ 앨범';
+        btnAlbum.onclick = () => triggerSingleSlotAlbum(i);
+
+        actions.appendChild(btnCam);
+        actions.appendChild(btnAlbum);
+
+        if (img) {
+          const btnDel = document.createElement('button');
+          btnDel.type = 'button';
+          btnDel.className = 'px-1.5 py-1 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 transition';
+          btnDel.textContent = '✕';
+          btnDel.title = '삭제';
+          btnDel.onclick = () => {
+            state.photos[i] = null;
+            updateSlotsUI();
+            renderCanvas();
+          };
+          actions.appendChild(btnDel);
+        }
+
+        card.appendChild(actions);
+        grid.appendChild(card);
+
+        // 카메라 모달 하단 미니 슬롯
+        const mini = document.createElement('div');
+        const isCurrent = state.activeSlotIndex === i;
+        mini.className = `aspect-[4/3] rounded-xl overflow-hidden border-2 relative flex items-center justify-center bg-stone-800 cursor-pointer ${
+          isCurrent ? 'border-emerald-400 ring-2 ring-emerald-400/40' : 'border-stone-700'
+        }`;
+        mini.onclick = () => {
+          if (!state.isAutoShooting) {
+            state.activeSlotIndex = i;
+            updateSlotsUI();
+            updateCameraTargetBadge();
+          }
+        };
+        if (img) {
+          mini.innerHTML = `<img src="${img.src}" class="w-full h-full object-cover" /><span class="absolute bottom-1 right-1 px-1.5 py-0.2 bg-black/70 text-[10px] font-bold rounded text-white">${i + 1}</span>`;
+        } else {
+          mini.innerHTML = `<span class="text-xs font-bold ${isCurrent ? 'text-emerald-300' : 'text-stone-400'}">${i + 1}컷</span>`;
+        }
+        modalMini.appendChild(mini);
+      }
+    }
+
+    // 개별 슬롯 앨범 교체 트리거
+    let pendingSingleSlot = 0;
+    function triggerSingleSlotAlbum(slotIndex) {
+      pendingSingleSlot = slotIndex;
+      const input = document.getElementById('inputSingleSlotPhoto');
+      input.value = '';
+      input.click();
+    }
+
+    // File 객체를 HTMLImageElement로 로드하는 유틸리티
+    function loadImageFromFile(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onload = () => resolve(img);
+          img.onerror = reject;
+          img.src = e.target.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    // 다중 사진 앨범 업로드 처리 (최대 4장)
+    document.getElementById('inputMultiPhotos').addEventListener('change', async (e) => {
+      const files = Array.from(e.target.files || []).slice(0, 4);
+      if (!files.length) return;
+      try {
+        const loaded = await Promise.all(files.map(loadImageFromFile));
+        // 빈 슬롯부터 채우거나, 4장을 한꺼번에 올렸으면 1~4컷 덮어쓰기
+        if (loaded.length === 4) {
+          state.photos = loaded;
+        } else {
+          let cursor = 0;
+          for (let i = 0; i < 4 && cursor < loaded.length; i++) {
+            if (!state.photos[i]) {
+              state.photos[i] = loaded[cursor++];
+            }
+          }
+          // 빈 자리가 부족하면 앞쪽부터 채움
+          let fallbackIdx = 0;
+          while (cursor < loaded.length && fallbackIdx < 4) {
+            state.photos[fallbackIdx++] = loaded[cursor++];
+          }
+        }
+        updateSlotsUI();
+        renderCanvas();
+        showToast(`사진 ${loaded.length}장을 불러왔습니다.`);
+      } catch (err) {
+        showToast('사진을 불러오는 중 오류가 발생했습니다.');
+      }
+      e.target.value = '';
+    });
+
+    // 단일 슬롯 사진 업로드 처리
+    document.getElementById('inputSingleSlotPhoto').addEventListener('change', async (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      try {
+        const img = await loadImageFromFile(file);
+        state.photos[pendingSingleSlot] = img;
+        updateSlotsUI();
+        renderCanvas();
+        showToast(`${pendingSingleSlot + 1}컷 사진이 변경되었습니다.`);
+      } catch (err) {
+        showToast('사진을 불러오는 중 오류가 발생했습니다.');
+      }
+      e.target.value = '';
+    });
+
+    // 커스텀 배경 이미지 업로드 처리 (캔바 등)
+    document.getElementById('inputCustomBg').addEventListener('change', async (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      try {
+        const img = await loadImageFromFile(file);
+        state.customBgImg = img;
+        document.getElementById('btnClearCustomBg').classList.remove('hidden');
+        document.getElementById('customBgOptions').classList.remove('hidden');
+        document.getElementById('activeThemeLabel').textContent = '현재: 내 배경 이미지 적용 중';
+        // 기본 테마 버튼 선택 강조 해제
+        document.querySelectorAll('.theme-btn').forEach(btn => {
+          btn.classList.remove('border-emerald-600', 'bg-amber-50/60');
+          btn.classList.add('border-stone-200', 'bg-white');
+        });
+        renderCanvas();
+        showToast('내 배경 이미지가 적용되었습니다!');
+      } catch (err) {
+        showToast('배경 이미지를 불러오지 못했습니다.');
+      }
+      e.target.value = '';
+    });
+
+    // 커스텀 배경 이미지 지우기
+    document.getElementById('btnClearCustomBg').addEventListener('click', () => {
+      state.customBgImg = null;
+      document.getElementById('btnClearCustomBg').classList.add('hidden');
+      document.getElementById('customBgOptions').classList.add('hidden');
+      selectTheme(state.theme);
+      showToast('기본 마을 테마 배경으로 돌아왔습니다.');
+    });
+
+    // 커스텀 배경 옵션 변경 이벤트
+    document.getElementById('selectCustomBgMode').addEventListener('change', (e) => {
+      state.customBgMode = e.target.value;
+      renderCanvas();
+    });
+    document.getElementById('selectCustomTextColor').addEventListener('change', (e) => {
+      state.customTextColor = e.target.value;
+      renderCanvas();
+    });
+    document.getElementById('chkShowTextOnCustom').addEventListener('change', (e) => {
+      state.showTextOnCustom = e.target.checked;
+      renderCanvas();
+    });
+
+    // 인쇄 방식 (1명 / 2명 / 3명) 버튼 바인딩
+    document.querySelectorAll('.layout-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const mode = Number(btn.dataset.layout);
+        state.layoutMode = mode;
+        document.querySelectorAll('.layout-btn').forEach(b => {
+          const isSel = Number(b.dataset.layout) === mode;
+          b.className = isSel
+            ? 'layout-btn p-3 rounded-2xl border-2 border-emerald-600 bg-emerald-50/70 text-left transition'
+            : 'layout-btn p-3 rounded-2xl border-2 border-stone-200 bg-stone-50 hover:bg-stone-100 text-left transition';
+          const titleDiv = b.querySelector('div:first-child');
+          const subDiv = b.querySelector('div:last-child');
+          if (titleDiv) titleDiv.className = isSel ? 'font-bold text-sm text-emerald-900' : 'font-bold text-sm text-stone-800';
+          if (subDiv) subDiv.className = isSel ? 'text-xs text-emerald-700 mt-0.5' : 'text-xs text-stone-500 mt-0.5';
+        });
+
+        const modeText = mode === 1 ? '1명 (큰 1줄)' : (mode === 2 ? '2명 (점선 절취)' : '3명 (점선 절취)');
+        document.getElementById('badgeLayoutInfo').textContent = `100×148mm · ${modeText}`;
+        renderCanvas();
+      });
+    });
+
+    // 기본 마을 테마 선택 함수
+    function selectTheme(themeKey) {
+      state.theme = themeKey;
+      // 기본 테마 선택 시 커스텀 배경이 있다면 해제하여 즉시 반영
+      if (state.customBgImg) {
+        state.customBgImg = null;
+        document.getElementById('btnClearCustomBg').classList.add('hidden');
+        document.getElementById('customBgOptions').classList.add('hidden');
+      }
+      document.getElementById('activeThemeLabel').textContent = `현재: ${THEME_NAMES[themeKey]}`;
+      document.querySelectorAll('.theme-btn').forEach(btn => {
+        const isSel = btn.dataset.theme === themeKey;
+        btn.className = isSel
+          ? 'theme-btn group p-2.5 rounded-2xl border-2 border-emerald-600 bg-emerald-50/60 flex flex-col items-center gap-1.5 transition'
+          : 'theme-btn group p-2.5 rounded-2xl border-2 border-stone-200 bg-white hover:bg-stone-50 flex flex-col items-center gap-1.5 transition';
+      });
+      renderCanvas();
+    }
+
+    document.querySelectorAll('.theme-btn').forEach(btn => {
+      btn.addEventListener('click', () => selectTheme(btn.dataset.theme));
+    });
+
+    // 문구 입력 실시간 반영
+    document.getElementById('inputTitle').addEventListener('input', (e) => {
+      state.title = e.target.value;
+      renderCanvas();
+    });
+    document.getElementById('inputSubtitle').addEventListener('input', (e) => {
+      state.subtitle = e.target.value;
+      renderCanvas();
+    });
+    document.getElementById('inputDate').addEventListener('input', (e) => {
+      state.dateText = e.target.value;
+      renderCanvas();
+    });
+    document.getElementById('chkShowDate').addEventListener('change', (e) => {
+      state.showDate = e.target.checked;
+      renderCanvas();
+    });
+
+    // 사진 색감 필터 선택
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        state.filter = btn.dataset.filter;
+        document.querySelectorAll('.filter-btn').forEach(b => {
+          const isSel = b.dataset.filter === state.filter;
+          b.className = isSel
+            ? 'filter-btn py-2 px-3 rounded-xl border-2 border-emerald-600 bg-emerald-50 text-emerald-900 text-xs font-bold transition'
+            : 'filter-btn py-2 px-3 rounded-xl border-2 border-stone-200 bg-white hover:bg-stone-50 text-stone-700 text-xs font-bold transition';
+        });
+        renderCanvas();
+      });
+    });
+
+    // 셀피 가장자리 잘림 보정 선택
+    document.querySelectorAll('.bleed-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        state.bleedPercent = Number(btn.dataset.bleed);
+        document.querySelectorAll('.bleed-btn').forEach(b => {
+          const isSel = Number(b.dataset.bleed) === state.bleedPercent;
+          b.className = isSel
+            ? 'bleed-btn py-2 px-2.5 rounded-xl border-2 border-emerald-600 bg-emerald-50 text-xs font-bold text-emerald-900 transition'
+            : 'bleed-btn py-2 px-2.5 rounded-xl border-2 border-stone-200 bg-white hover:bg-stone-100 text-xs font-bold text-stone-700 transition';
+        });
+        renderCanvas();
+      });
+    });
+
+    // 새로 찍기 (사진 4장 초기화)
+    document.getElementById('btnResetAll').addEventListener('click', () => {
+      state.photos = [null, null, null, null];
+      state.activeSlotIndex = 0;
+      updateSlotsUI();
+      renderCanvas();
+      showToast('사진 4컷이 초기화되었습니다. 다음 분 촬영을 시작하세요!');
+    });
+
+    /**
+     * 고화질 PNG 파일 다운로드 (1200 x 1776 px)
+     */
+    function downloadPostcard() {
+      renderCanvas();
+      const now = new Date();
+      const stamp = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}`;
+      const filename = `우리마을네컷_${stamp}.png`;
+
+      try {
+        printCanvas.toBlob((blob) => {
+          if (!blob) {
+            // toBlob 미지원 시 dataURL fallback
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = printCanvas.toDataURL('image/png');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast('인화용 이미지가 저장되었습니다!');
+            return;
+          }
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.download = filename;
+          link.href = url;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          setTimeout(() => URL.revokeObjectURL(url), 3000);
+          showToast('인화용 이미지가 저장되었습니다! 셀피 앱에서 인쇄해 주세요.');
+        }, 'image/png');
+      } catch (err) {
+        showToast('저장 버튼이 제한된 환경이라면 미리보기 사진을 길게 눌러 저장해 주세요.');
+      }
+    }
+
+    /**
+     * ============================================================================
+     * 카메라 촬영 모달 제어 로직
+     * ============================================================================
+     */
+    const cameraModal = document.getElementById('cameraModal');
+    const cameraVideo = document.getElementById('cameraVideo');
+
+    function updateCameraTargetBadge() {
+      document.getElementById('cameraTargetBadge').textContent = `${state.activeSlotIndex + 1}컷 촬영 대기 중`;
+      cameraVideo.style.transform = state.mirror ? 'scaleX(-1)' : 'scaleX(1)';
+      const btnMirror = document.getElementById('btnToggleMirror');
+      btnMirror.textContent = state.mirror ? '↔ 좌우반전 ON' : '↔ 좌우반전 OFF';
+      btnMirror.className = state.mirror
+        ? 'px-3 py-1.5 rounded-xl bg-stone-800 hover:bg-stone-700 text-emerald-300 font-bold border border-stone-700 transition'
+        : 'px-3 py-1.5 rounded-xl bg-stone-800 hover:bg-stone-700 text-stone-400 font-bold border border-stone-700 transition';
+    }
+
+    async function startCamera() {
+      const errorBox = document.getElementById('cameraErrorBox');
+      const guideOverlay = document.getElementById('cameraGuideOverlay');
+      errorBox.classList.add('hidden');
+      cameraVideo.classList.remove('hidden');
+      guideOverlay.classList.remove('hidden');
+
+      stopCameraStream();
+
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        cameraVideo.classList.add('hidden');
+        guideOverlay.classList.add('hidden');
+        errorBox.classList.remove('hidden');
+        document.getElementById('cameraErrorMsg').textContent =
+          '현재 브라우저 환경에서는 카메라 직접 연결이 지원되지 않습니다. 앨범에서 사진을 선택해 네컷을 만들어 보세요!';
+        return;
+      }
+
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: state.facingMode,
+            width: { ideal: 1280 },
+            height: { ideal: 960 }
+          },
+          audio: false
+        });
+        state.stream = stream;
+        cameraVideo.srcObject = stream;
+        await cameraVideo.play();
+        updateCameraTargetBadge();
+      } catch (err) {
+        console.warn('카메라 접근 오류:', err);
+        cameraVideo.classList.add('hidden');
+        guideOverlay.classList.add('hidden');
+        errorBox.classList.remove('hidden');
+        document.getElementById('cameraErrorMsg').textContent =
+          '카메라 권한이 차단되었거나 연결된 카메라가 없습니다. 주소창의 카메라 권한을 허용하거나 [앨범에서 사진 고르기]를 이용해 주세요.';
+      }
+    }
+
+    function stopCameraStream() {
+      if (state.stream) {
+        state.stream.getTracks().forEach(track => track.stop());
+        state.stream = null;
+      }
+      cameraVideo.srcObject = null;
+    }
+
+    function openCameraForSlot(slotIndex = null) {
+      if (slotIndex !== null) {
+        state.activeSlotIndex = slotIndex;
+      } else {
+        // 첫 번째 빈 슬롯 찾기 (모두 찼으면 0번부터)
+        const firstEmpty = state.photos.findIndex(p => p === null);
+        state.activeSlotIndex = firstEmpty !== -1 ? firstEmpty : 0;
+      }
+      state.isAutoShooting = false;
+      state.autoShootAbort = false;
+      updateSlotsUI();
+      updateCameraTargetBadge();
+      cameraModal.classList.remove('hidden');
+      startCamera();
+    }
+
+    function closeCameraModal() {
+      state.autoShootAbort = true;
+      state.isAutoShooting = false;
+      stopCameraStream();
+      cameraModal.classList.add('hidden');
+    }
+
+    document.getElementById('btnOpenCamera').addEventListener('click', () => openCameraForSlot(null));
+    document.getElementById('btnCloseCamera').addEventListener('click', closeCameraModal);
+
+    // 타이머 선택 버튼
+    document.querySelectorAll('.timer-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        state.timerSec = Number(btn.dataset.timer);
+        document.querySelectorAll('.timer-btn').forEach(b => {
+          const isSel = Number(b.dataset.timer) === state.timerSec;
+          b.className = isSel
+            ? 'timer-btn px-2.5 py-1 rounded-lg font-bold bg-emerald-600 text-white'
+            : 'timer-btn px-2.5 py-1 rounded-lg font-bold text-stone-300 hover:text-white';
+        });
+      });
+    });
+
+    // 좌우 반전 토글
+    document.getElementById('btnToggleMirror').addEventListener('click', () => {
+      state.mirror = !state.mirror;
+      updateCameraTargetBadge();
+    });
+
+    // 전/후면 카메라 전환
+    document.getElementById('btnSwitchFacing').addEventListener('click', () => {
+      state.facingMode = state.facingMode === 'user' ? 'environment' : 'user';
+      // 후면 카메라일 때는 자동으로 좌우반전 해제
+      state.mirror = state.facingMode === 'user';
+      startCamera();
+    });
+
+    // 카운트다운 대기 함수
+    function runCountdown(seconds) {
+      return new Promise((resolve) => {
+        if (seconds <= 0) {
+          resolve(true);
+          return;
+        }
+        const overlay = document.getElementById('countdownOverlay');
+        const numEl = document.getElementById('countdownNumber');
+        overlay.classList.remove('hidden');
+
+        let remain = seconds;
+        const tick = () => {
+          if (state.autoShootAbort) {
+            overlay.classList.add('hidden');
+            resolve(false);
+            return;
+          }
+          numEl.textContent = remain;
+          numEl.classList.remove('animate-count');
+          void numEl.offsetWidth; // 리플로우로 애니메이션 재시작
+          numEl.classList.add('animate-count');
+
+          if (remain <= 0) {
+            overlay.classList.add('hidden');
+            resolve(true);
+            return;
+          }
+          remain--;
+          setTimeout(tick, 950);
+        };
+        tick();
+      });
+    }
+
+    // 현재 비디오 프레임을 캡처하여 지정 슬롯에 저장
+    function captureFrameToSlot(slotIdx) {
+      return new Promise((resolve) => {
+        if (!cameraVideo.videoWidth || !cameraVideo.videoHeight) {
+          resolve(false);
+          return;
+        }
+
+        // 플래시 & 셔터음
+        playShutterSound();
+        const flashEl = document.getElementById('shutterFlashOverlay');
+        flashEl.classList.remove('hidden', 'animate-flash');
+        void flashEl.offsetWidth;
+        flashEl.classList.add('animate-flash');
+        setTimeout(() => flashEl.classList.add('hidden'), 460);
+
+        const capCanvas = document.createElement('canvas');
+        capCanvas.width = cameraVideo.videoWidth;
+        capCanvas.height = cameraVideo.videoHeight;
+        const capCtx = capCanvas.getContext('2d');
+
+        if (state.mirror) {
+          capCtx.translate(capCanvas.width, 0);
+          capCtx.scale(-1, 1);
+        }
+        capCtx.drawImage(cameraVideo, 0, 0, capCanvas.width, capCanvas.height);
+
+        const img = new Image();
+        img.onload = () => {
+          state.photos[slotIdx] = img;
+          updateSlotsUI();
+          renderCanvas();
+          resolve(true);
+        };
+        img.src = capCanvas.toDataURL('image/jpeg', 0.94);
+      });
+    }
+
+    // 한 컷만 촬영하기
+    document.getElementById('btnCaptureSingle').addEventListener('click', async () => {
+      if (state.isAutoShooting) return;
+      if (!state.stream) {
+        showToast('카메라가 먼저 연결되어야 촬영할 수 있습니다.');
+        return;
+      }
+      state.isAutoShooting = true;
+      state.autoShootAbort = false;
+      document.getElementById('cameraStatusHint').textContent = `${state.activeSlotIndex + 1}컷 촬영 중! 카메라를 봐주세요 😊`;
+
+      const ok = await runCountdown(state.timerSec);
+      if (ok && !state.autoShootAbort) {
+        await captureFrameToSlot(state.activeSlotIndex);
+        showToast(`📸 ${state.activeSlotIndex + 1}컷 촬영 완료!`);
+        // 다음 슬롯으로 커서 이동
+        state.activeSlotIndex = (state.activeSlotIndex + 1) % 4;
+        updateSlotsUI();
+        updateCameraTargetBadge();
+      }
+      document.getElementById('cameraStatusHint').textContent = '웃는 표정으로 준비해 주세요 😊';
+      state.isAutoShooting = false;
+    });
+
+    // 4컷 자동 연속 촬영하기
+    document.getElementById('btnCaptureAuto4').addEventListener('click', async () => {
+      if (state.isAutoShooting) return;
+      if (!state.stream) {
+        showToast('카메라가 먼저 연결되어야 촬영할 수 있습니다.');
+        return;
+      }
+
+      state.isAutoShooting = true;
+      state.autoShootAbort = false;
+      const waitSec = state.timerSec > 0 ? state.timerSec : 2; // 연속 촬영 시 최소 2초 준비 시간
+
+      for (let i = 0; i < 4; i++) {
+        if (state.autoShootAbort) break;
+        state.activeSlotIndex = i;
+        updateSlotsUI();
+        updateCameraTargetBadge();
+        document.getElementById('cameraStatusHint').textContent = `연속 촬영 (${i + 1}/4컷) — 포즈를 취해주세요!`;
+
+        const ok = await runCountdown(waitSec);
+        if (!ok || state.autoShootAbort) break;
+
+        await captureFrameToSlot(i);
+        // 컷 사이 잠깐 숨고르기 (0.8초)
+        if (i < 3) {
+          document.getElementById('cameraStatusHint').textContent = `좋아요! 다음 ${i + 2}컷 포즈를 준비하세요 ✨`;
+          await new Promise(r => setTimeout(r, 850));
+        }
+      }
+
+      state.isAutoShooting = false;
+      if (!state.autoShootAbort) {
+        showToast('🎉 4컷 연속 촬영이 모두 완료되었습니다!');
+        setTimeout(() => closeCameraModal(), 600);
+      }
+    });
+
+    // 초기화 실행
+    document.getElementById('inputDate').value = state.dateText;
+    updateSlotsUI();
+    renderCanvas();
+
+    // 웹 폰트 로드 완료 시 캔버스 글꼴 깔끔하게 재렌더링
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(() => renderCanvas());
+    }
+  </script>
+</body>
+</html>
